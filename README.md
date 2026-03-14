@@ -73,3 +73,7 @@ Use a single **Web Service** so the server can serve both the game and WebSocket
 - Real‑time chat is only enabled in multiplayer rooms.
 - Undo/Redo is only available in solo mode.
 - The server also supports listing available rooms.
+
+## Play Online
+
+- https://adhrit-watersort-online.onrender.com
