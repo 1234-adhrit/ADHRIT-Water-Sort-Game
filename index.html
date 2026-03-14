@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Water Sort - Solo & Online Multiplayer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg1: #2b0a3d;
+      --bg2: #4b1186;
+      --bg3: #7b2cbf;
+      --card: rgba(255, 255, 255, 0.08);
+      --stroke: rgba(255, 255, 255, 0.32);
+      --text: #f7ecff;
+      --muted: #d8c6ff;
+      --accent: #ffb703;
+      --accent-2: #ff5d8f;
+      --success: #57e389;
+      --error: #ff6b6b;
+      --shadow: 0 18px 40px rgba(10, 5, 25, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Baloo 2", "Fredoka", "Trebuchet MS", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 40%),
+        radial-gradient(circle at 80% 10%, rgba(255, 183, 3, 0.25), transparent 45%),
+        radial-gradient(circle at 10% 80%, rgba(255, 93, 143, 0.22), transparent 45%),
+        linear-gradient(140deg, var(--bg1), var(--bg2), var(--bg3));
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff8fab, #ffd6a5);
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.3);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #2b0a3d;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0.5px;
+    }
+
+    .tagline {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 10px 20px 40px;
+    }
+
+    .screen {
+      width: min(1100px, 100%);
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 26px;
+      align-items: center;
+    }
+
+    .hero h2 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 40px);
+    }
+
+    .hero p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .level-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .level-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .level-btn {
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .level-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255, 183, 3, 0.2);
+    }
+
+    .level-btn.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 12px 0;
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .slider-row {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .slider-row input[type="range"] {
+      width: 100%;
+    }
+
+    .name-row {
+      display: grid;
+      gap: 8px;
+      margin: 16px 0 18px;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(20, 10, 40, 0.6);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255, 183, 3, 0.25);
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-family: "Fredoka", "Baloo 2", sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      background: linear-gradient(120deg, var(--accent), #ffd166);
+      color: #2b0a3d;
+      box-shadow: 0 12px 20px rgba(255, 183, 3, 0.25);
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.25);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .multi-card {
+      background: rgba(20, 10, 40, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rooms-list {
+      display: grid;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .room-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .room-info {
+      display: grid;
+      gap: 2px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .room-code-mini {
+      font-size: 18px;
+      letter-spacing: 3px;
+      color: var(--accent);
+    }
+
+    .room-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .room-join-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .note {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: var(--error);
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .lobby {
+      display: grid;
+      gap: 16px;
+    }
+
+    .room-code {
+      font-size: 26px;
+      letter-spacing: 4px;
+      color: var(--accent);
+    }
+
+    .players-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .player-pill {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-2);
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .hud-left {
+      display: grid;
+      gap: 4px;
+    }
+
+    .hud-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+      gap: 18px;
+      justify-items: center;
+      margin-bottom: 14px;
+    }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .game-main {
+      min-width: 0;
+    }
+
+    .chat-panel {
+      background: rgba(15, 5, 35, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .chat-panel.muted .chat-messages {
+      opacity: 0.35;
+      filter: grayscale(0.3);
+    }
+
+    .chat-header {
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .chat-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .chat-toggles {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .chat-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .chat-muted-banner {
+      display: none;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chat-panel.muted .chat-muted-banner {
+      display: block;
+    }
+
+    .chat-typing {
+      min-height: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chat-messages {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 10px;
+      height: 320px;
+      overflow-y: auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    .chat-message {
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+    }
+
+    .chat-meta {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chat-bubble {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 10px;
+      border-radius: 12px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .chat-message.self .chat-bubble {
+      background: rgba(255, 183, 3, 0.2);
+      border-color: rgba(255, 183, 3, 0.35);
+    }
+
+    .chat-message.system .chat-bubble {
+      background: rgba(255, 255, 255, 0.08);
+      font-style: italic;
+    }
+
+    .chat-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .chat-form input {
+      margin: 0;
+    }
+
+    .chat-send {
+      padding: 10px 14px;
+    }
+
+    .tube {
+      position: relative;
+      width: 72px;
+      height: 210px;
+      padding: 22px 10px 10px;
+      border-radius: 18px 18px 26px 26px;
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      background: rgba(15, 5, 35, 0.5);
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tube::before {
+      content: "";
+      position: absolute;
+      top: -12px;
+      left: 8px;
+      right: 8px;
+      height: 14px;
+      border-radius: 14px 14px 0 0;
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      border-bottom: none;
+      background: rgba(15, 5, 35, 0.45);
+    }
+
+    .tube.selected {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 30px rgba(255, 183, 3, 0.25);
+      border-color: rgba(255, 183, 3, 0.9);
+    }
+
+    .tube.pour {
+      animation: wobble 0.35s ease;
+    }
+
+    @keyframes wobble {
+      0% { transform: rotate(0deg); }
+      30% { transform: rotate(-3deg); }
+      60% { transform: rotate(2deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .liquid {
+      position: absolute;
+      inset: 24px 10px 10px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 4px;
+    }
+
+    .layer {
+      flex: 1;
+      border-radius: 10px;
+      opacity: 0.95;
+      transition: transform 0.2s ease;
+    }
+
+    .layer.filled {
+      box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.3);
+    }
+
+    .status {
+      min-height: 24px;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .status.good {
+      color: var(--success);
+    }
+
+    .status.bad {
+      color: var(--error);
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    body.win::after {
+      content: "";
+      position: fixed;
+      inset: -20%;
+      background: repeating-linear-gradient(
+        120deg,
+        rgba(255, 183, 3, 0.18),
+        rgba(255, 183, 3, 0.18) 12px,
+        rgba(255, 93, 143, 0.18) 12px,
+        rgba(255, 93, 143, 0.18) 24px,
+        rgba(79, 172, 254, 0.18) 24px,
+        rgba(79, 172, 254, 0.18) 36px
+      );
+      animation: drift 8s linear infinite;
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 15;
+    }
+
+    .win-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 10, 40, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 20;
+    }
+
+    .win-overlay.active {
+      display: flex;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .win-card {
+      background: linear-gradient(140deg, rgba(255, 183, 3, 0.2), rgba(255, 93, 143, 0.2));
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 20px;
+      padding: 24px 26px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      max-width: 320px;
+    }
+
+    .win-card h2 {
+      margin: 0 0 8px;
+    }
+
+    @keyframes drift {
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+      100% {
+        transform: translateY(-60px) rotate(6deg);
+      }
+    }
+
+    @media (max-width: 720px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .tube {
+        width: 64px;
+        height: 190px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .game-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-messages {
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand">
+        <div class="logo">WS</div>
+        <div>
+          <h1>Water Sort</h1>
+          <p class="tagline">Pour one layer at a time. Win together.</p>
+        </div>
+      </div>
+      <p class="tagline">Solo or online multiplayer with name-locked rooms.</p>
+    </header>
+
+    <main>
+      <section id="screen-home" class="screen active">
+        <div class="card hero">
+          <div>
+            <h2>Sort the colors, one drop at a time.</h2>
+            <p>Move exactly one layer per turn. For online multiplayer, create a server (room) and share the code. Players must enter their names before they can create or join.</p>
+            <div class="name-row">
+              <label for="playerName">Your player name</label>
+              <input id="playerName" type="text" maxlength="16" placeholder="Enter your name" />
+            </div>
+            <div class="name-row">
+              <label for="serverUrl">Multiplayer server URL</label>
+              <input id="serverUrl" type="text" placeholder="ws://your-server:3000" />
+              <p class="note">If you opened this file directly, paste your ws:// server URL. If the game is hosted by the same server, it auto-fills.</p>
+            </div>
+            <div class="mode-grid">
+              <button id="soloBtn" class="primary">Play Solo</button>
+              <div class="multi-card">
+                <strong>Multiplayer Server</strong>
+                <input id="roomCodeInput" type="text" maxlength="6" placeholder="Room code (for join)" />
+                <button id="createRoomBtn" class="primary">Create Server</button>
+                <button id="joinRoomBtn" class="secondary">Join Server</button>
+                <p class="note">Tip: open a second device or browser and join with the code.</p>
+              </div>
+              <div class="multi-card">
+                <strong>Available Servers</strong>
+                <button id="refreshRoomsBtn" class="secondary">Refresh List</button>
+                <div id="roomsList" class="rooms-list"></div>
+                <p class="note">Enter your name + server URL, then refresh.</p>
+              </div>
+            </div>
+            <div id="homeError" class="error"></div>
+          </div>
+          <div class="side-stack">
+            <div class="card">
+              <h3>Rules</h3>
+              <ul>
+                <li>Only move one liquid layer at a time.</li>
+                <li>You can pour onto the same color or an empty tube.</li>
+                <li>Fill each tube with a single color to win.</li>
+                <li>Multiplayer is turn-based. Only the current player can pour.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Difficulty & Levels</h3>
+              <div class="level-header">
+                <button id="continueBtn" class="secondary">Continue</button>
+                <span id="progressLabel" class="note"></span>
+              </div>
+              <div id="levelList" class="level-list"></div>
+              <div class="divider"></div>
+              <div class="settings-header">
+                <strong>Custom Settings</strong>
+                <span id="difficultyMode" class="note">Custom</span>
+              </div>
+              <div class="slider-row">
+                <label for="colorCountRange">Colors <span id="colorCountLabel"></span></label>
+                <input id="colorCountRange" type="range" min="3" max="10" step="1" />
+              </div>
+              <div class="slider-row">
+                <label for="capacityRange">Tube Capacity <span id="capacityLabel"></span></label>
+                <input id="capacityRange" type="range" min="3" max="6" step="1" />
+              </div>
+              <div class="slider-row">
+                <label for="extraTubesRange">Empty Tubes <span id="extraTubesLabel"></span></label>
+                <input id="extraTubesRange" type="range" min="1" max="4" step="1" />
+              </div>
+              <p class="note">Custom settings apply to solo or host-created rooms.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-lobby" class="screen">
+        <div class="card lobby">
+          <h2>Server Room <span id="roomCodeLabel" class="room-code"></span></h2>
+          <p id="connectionStatus" class="note"></p>
+          <div class="players-list" id="playersList"></div>
+          <div class="hud-actions">
+            <button id="startGameBtn" class="primary">Start Game</button>
+            <button id="leaveRoomBtn" class="ghost">Leave Room</button>
+          </div>
+          <p id="lobbyNote" class="note"></p>
+        </div>
+      </section>
+
+      <section id="screen-game" class="screen">
+        <div class="hud">
+          <div class="hud-left">
+            <div id="modeLabel"></div>
+            <div id="turnLabel"></div>
+          </div>
+          <div class="hud-actions">
+            <button id="undoBtn" class="secondary">Undo</button>
+            <button id="redoBtn" class="secondary">Redo</button>
+            <button id="newPuzzleBtn" class="primary">New Puzzle</button>
+            <button id="restartBtn" class="secondary">Restart</button>
+            <button id="soundToggleBtn" class="ghost">Sound: On</button>
+            <button id="leaveGameBtn" class="ghost">Exit</button>
+          </div>
+        </div>
+        <div class="game-layout">
+          <div class="game-main">
+            <div id="board" class="board"></div>
+            <div id="status" class="status"></div>
+            <p class="footer-note">All moves are one layer only — no double pours.</p>
+          </div>
+          <aside class="chat-panel" id="chatPanel">
+            <div class="chat-header-row">
+              <div class="chat-header">Room Chat</div>
+              <div class="chat-toggles">
+                <label class="chat-toggle"><input id="chatTimestampToggle" type="checkbox" checked />Time</label>
+                <label class="chat-toggle"><input id="chatMuteToggle" type="checkbox" />Mute</label>
+              </div>
+            </div>
+            <div id="typingIndicator" class="chat-typing"></div>
+            <div id="chatMutedBanner" class="chat-muted-banner">Chat muted.</div>
+            <div id="chatMessages" class="chat-messages"></div>
+            <form id="chatForm" class="chat-form">
+              <input id="chatInput" type="text" maxlength="200" placeholder="Type a message..." />
+              <button id="chatSendBtn" class="secondary chat-send" type="submit">Send</button>
+            </form>
+            <p class="note">Chat is available in multiplayer rooms.</p>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <div id="winOverlay" class="win-overlay">
+      <div class="win-card">
+        <h2>Level Cleared!</h2>
+        <p id="winMessage" class="note"></p>
+        <button id="winCloseBtn" class="primary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const palette = [
+      "#ff4d6d",
+      "#ffd166",
+      "#06d6a0",
+      "#4cc9f0",
+      "#b5179e",
+      "#f8961e",
+      "#9b5de5",
+      "#00bbf9",
+      "#f15bb5",
+      "#70e000"
+    ];
+
+    const LEVELS = [
+      { id: 1, name: "Level 1", colorCount: 3, capacity: 3, extraTubes: 1 },
+      { id: 2, name: "Level 2", colorCount: 4, capacity: 3, extraTubes: 1 },
+      { id: 3, name: "Level 3", colorCount: 4, capacity: 4, extraTubes: 2 },
+      { id: 4, name: "Level 4", colorCount: 5, capacity: 4, extraTubes: 2 },
+      { id: 5, name: "Level 5", colorCount: 6, capacity: 4, extraTubes: 2 },
+      { id: 6, name: "Level 6", colorCount: 7, capacity: 4, extraTubes: 2 },
+      { id: 7, name: "Level 7", colorCount: 7, capacity: 5, extraTubes: 2 },
+      { id: 8, name: "Level 8", colorCount: 8, capacity: 5, extraTubes: 2 },
+      { id: 9, name: "Level 9", colorCount: 9, capacity: 5, extraTubes: 3 },
+      { id: 10, name: "Level 10", colorCount: 10, capacity: 5, extraTubes: 3 }
+    ];
+
+    const DEFAULT_SETTINGS = {
+      colorCount: 6,
+      capacity: 4,
+      extraTubes: 2
+    };
+
+    const STORAGE_KEYS = {
+      settings: "waterSortSettings",
+      progress: "waterSortProgress",
+      chat: "waterSortChatPrefs",
+      sound: "waterSortSound"
+    };
+
+    const state = {
+      mode: "solo",
+      capacity: DEFAULT_SETTINGS.capacity,
+      tubes: [],
+      initialTubes: [],
+      selected: null,
+      players: [],
+      currentTurn: 0,
+      playerName: "",
+      playerIndex: 0,
+      isHost: false,
+      roomCode: "",
+      socket: null,
+      selfId: "",
+      hostId: "",
+      serverUrl: "",
+      connected: false,
+      settings: { ...DEFAULT_SETTINGS },
+      selectedLevelId: null,
+      history: [],
+      future: [],
+      soundEnabled: true,
+      audioContext: null,
+      winActive: false,
+      showTimestamps: true,
+      chatMuted: false,
+      typingUsers: new Map(),
+      isTyping: false,
+      progress: { highestLevel: 1 },
+      rooms: []
+    };
+
+    let typingTimeout = null;
+
+    const ui = {
+      home: document.getElementById("screen-home"),
+      lobby: document.getElementById("screen-lobby"),
+      game: document.getElementById("screen-game"),
+      playerName: document.getElementById("playerName"),
+      serverUrl: document.getElementById("serverUrl"),
+      roomCodeInput: document.getElementById("roomCodeInput"),
+      soloBtn: document.getElementById("soloBtn"),
+      createRoomBtn: document.getElementById("createRoomBtn"),
+      joinRoomBtn: document.getElementById("joinRoomBtn"),
+      homeError: document.getElementById("homeError"),
+      refreshRoomsBtn: document.getElementById("refreshRoomsBtn"),
+      roomsList: document.getElementById("roomsList"),
+      continueBtn: document.getElementById("continueBtn"),
+      progressLabel: document.getElementById("progressLabel"),
+      levelList: document.getElementById("levelList"),
+      colorCountRange: document.getElementById("colorCountRange"),
+      capacityRange: document.getElementById("capacityRange"),
+      extraTubesRange: document.getElementById("extraTubesRange"),
+      colorCountLabel: document.getElementById("colorCountLabel"),
+      capacityLabel: document.getElementById("capacityLabel"),
+      extraTubesLabel: document.getElementById("extraTubesLabel"),
+      difficultyMode: document.getElementById("difficultyMode"),
+      roomCodeLabel: document.getElementById("roomCodeLabel"),
+      playersList: document.getElementById("playersList"),
+      startGameBtn: document.getElementById("startGameBtn"),
+      leaveRoomBtn: document.getElementById("leaveRoomBtn"),
+      lobbyNote: document.getElementById("lobbyNote"),
+      connectionStatus: document.getElementById("connectionStatus"),
+      modeLabel: document.getElementById("modeLabel"),
+      turnLabel: document.getElementById("turnLabel"),
+      undoBtn: document.getElementById("undoBtn"),
+      redoBtn: document.getElementById("redoBtn"),
+      newPuzzleBtn: document.getElementById("newPuzzleBtn"),
+      restartBtn: document.getElementById("restartBtn"),
+      soundToggleBtn: document.getElementById("soundToggleBtn"),
+      leaveGameBtn: document.getElementById("leaveGameBtn"),
+      board: document.getElementById("board"),
+      status: document.getElementById("status"),
+      winOverlay: document.getElementById("winOverlay"),
+      winMessage: document.getElementById("winMessage"),
+      winCloseBtn: document.getElementById("winCloseBtn"),
+      chatPanel: document.getElementById("chatPanel"),
+      chatTimestampToggle: document.getElementById("chatTimestampToggle"),
+      chatMuteToggle: document.getElementById("chatMuteToggle"),
+      typingIndicator: document.getElementById("typingIndicator"),
+      chatMutedBanner: document.getElementById("chatMutedBanner"),
+      chatMessages: document.getElementById("chatMessages"),
+      chatForm: document.getElementById("chatForm"),
+      chatInput: document.getElementById("chatInput"),
+      chatSendBtn: document.getElementById("chatSendBtn")
+    };
+
+    function setScreen(screen) {
+      ui.home.classList.remove("active");
+      ui.lobby.classList.remove("active");
+      ui.game.classList.remove("active");
+      screen.classList.add("active");
+    }
+
+    function showHomeError(message) {
+      ui.homeError.textContent = message;
+    }
+
+    function updateConnectionStatus(message) {
+      if (ui.connectionStatus) {
+        ui.connectionStatus.textContent = message;
+      }
+    }
+
+    function getAutoServerUrl() {
+      if (location.origin && location.origin.startsWith("http")) {
+        return location.origin.replace(/^http/, "ws");
+      }
+      return "";
+    }
+
+    function resolveServerUrl() {
+      const manual = ui.serverUrl.value.trim();
+      return manual || getAutoServerUrl();
+    }
+
+    function requireName() {
+      const name = ui.playerName.value.trim();
+      if (!name) {
+        showHomeError("Please enter your name to play.");
+        return null;
+      }
+      showHomeError("");
+      return name;
+    }
+
+    function toggleNameGates() {
+      const hasName = ui.playerName.value.trim().length > 0;
+      const hasServer = resolveServerUrl().length > 0;
+      ui.soloBtn.disabled = !hasName;
+      ui.createRoomBtn.disabled = !(hasName && hasServer);
+      ui.joinRoomBtn.disabled = !(hasName && hasServer);
+      if (ui.refreshRoomsBtn) ui.refreshRoomsBtn.disabled = !hasServer;
+    }
+
+    function syncPlayerIndex() {
+      state.playerIndex = state.players.findIndex(player => player.id === state.selfId);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function normalizeSettings(settings) {
+      return {
+        colorCount: clamp(Number(settings.colorCount) || DEFAULT_SETTINGS.colorCount, 3, palette.length),
+        capacity: clamp(Number(settings.capacity) || DEFAULT_SETTINGS.capacity, 3, 6),
+        extraTubes: clamp(Number(settings.extraTubes) || DEFAULT_SETTINGS.extraTubes, 1, 4)
+      };
+    }
+
+    function loadPersistedState() {
+      try {
+        const savedSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || "{}");
+        state.settings = normalizeSettings({ ...DEFAULT_SETTINGS, ...savedSettings });
+        state.capacity = state.settings.capacity;
+      } catch (error) {
+        state.settings = { ...DEFAULT_SETTINGS };
+      }
+
+      try {
+        const progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.progress) || "{}");
+        state.progress = {
+          highestLevel: clamp(Number(progress.highestLevel) || 1, 1, LEVELS.length)
+        };
+      } catch (error) {
+        state.progress = { highestLevel: 1 };
+      }
+
+      try {
+        const chatPrefs = JSON.parse(localStorage.getItem(STORAGE_KEYS.chat) || "{}");
+        state.showTimestamps = chatPrefs.showTimestamps !== false;
+        state.chatMuted = chatPrefs.chatMuted === true;
+      } catch (error) {
+        state.showTimestamps = true;
+        state.chatMuted = false;
+      }
+
+      try {
+        const soundPref = JSON.parse(localStorage.getItem(STORAGE_KEYS.sound) || "{}");
+        state.soundEnabled = soundPref.enabled !== false;
+      } catch (error) {
+        state.soundEnabled = true;
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(state.progress));
+    }
+
+    function saveChatPrefs() {
+      localStorage.setItem(STORAGE_KEYS.chat, JSON.stringify({
+        showTimestamps: state.showTimestamps,
+        chatMuted: state.chatMuted
+      }));
+    }
+
+    function saveSoundPref() {
+      localStorage.setItem(STORAGE_KEYS.sound, JSON.stringify({ enabled: state.soundEnabled }));
+    }
+
+    function updateSettingsUI() {
+      if (ui.colorCountRange) ui.colorCountRange.value = state.settings.colorCount;
+      if (ui.capacityRange) ui.capacityRange.value = state.settings.capacity;
+      if (ui.extraTubesRange) ui.extraTubesRange.value = state.settings.extraTubes;
+      if (ui.colorCountLabel) ui.colorCountLabel.textContent = state.settings.colorCount;
+      if (ui.capacityLabel) ui.capacityLabel.textContent = state.settings.capacity;
+      if (ui.extraTubesLabel) ui.extraTubesLabel.textContent = state.settings.extraTubes;
+      if (ui.difficultyMode) {
+        ui.difficultyMode.textContent = state.selectedLevelId ? `Level ${state.selectedLevelId}` : "Custom";
+      }
+    }
+
+    function renderLevels() {
+      if (!ui.levelList) return;
+      ui.levelList.innerHTML = "";
+      LEVELS.forEach(level => {
+        const button = document.createElement("button");
+        button.className = "level-btn";
+        button.textContent = level.id;
+        const locked = level.id > state.progress.highestLevel;
+        if (locked) button.classList.add("locked");
+        if (state.selectedLevelId === level.id) button.classList.add("active");
+        button.disabled = locked;
+        button.addEventListener("click", () => selectLevel(level.id));
+        ui.levelList.appendChild(button);
+      });
+      if (ui.progressLabel) {
+        ui.progressLabel.textContent = `Unlocked: ${state.progress.highestLevel}/${LEVELS.length}`;
+      }
+      if (ui.continueBtn) {
+        ui.continueBtn.textContent = `Continue (L${state.progress.highestLevel})`;
+      }
+    }
+
+    function selectLevel(levelId) {
+      const level = LEVELS.find(item => item.id === levelId);
+      if (!level) return;
+      state.selectedLevelId = levelId;
+      state.settings = normalizeSettings(level);
+      state.capacity = state.settings.capacity;
+      saveSettings();
+      updateSettingsUI();
+      renderLevels();
+    }
+
+    function applyCustomSettings() {
+      state.selectedLevelId = null;
+      state.settings = normalizeSettings({
+        colorCount: ui.colorCountRange.value,
+        capacity: ui.capacityRange.value,
+        extraTubes: ui.extraTubesRange.value
+      });
+      state.capacity = state.settings.capacity;
+      saveSettings();
+      updateSettingsUI();
+      renderLevels();
+    }
+
+    function continueLevel() {
+      selectLevel(state.progress.highestLevel);
+    }
+
+    function renderRoomsList() {
+      if (!ui.roomsList) return;
+      ui.roomsList.innerHTML = "";
+      if (!state.rooms || state.rooms.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "note";
+        empty.textContent = "No active rooms yet.";
+        ui.roomsList.appendChild(empty);
+        return;
+      }
+      state.rooms.forEach(room => {
+        const item = document.createElement("div");
+        item.className = "room-item";
+
+        const info = document.createElement("div");
+        info.className = "room-info";
+        const codeEl = document.createElement("div");
+        codeEl.className = "room-code-mini";
+        codeEl.textContent = room.code;
+        const meta = document.createElement("div");
+        meta.className = "room-meta";
+        meta.textContent = `${room.players}/${room.capacity} · ${room.status}`;
+        info.appendChild(codeEl);
+        info.appendChild(meta);
+
+        const joinBtn = document.createElement("button");
+        joinBtn.className = "secondary room-join-btn";
+        joinBtn.textContent = "Join";
+        const canJoin = room.status === "waiting" && room.players < room.capacity;
+        joinBtn.disabled = !canJoin;
+        joinBtn.addEventListener("click", () => {
+          ui.roomCodeInput.value = room.code;
+          joinRoom();
+        });
+
+        item.appendChild(info);
+        item.appendChild(joinBtn);
+        ui.roomsList.appendChild(item);
+      });
+    }
+
+    function requestRoomList() {
+      const name = ui.playerName.value.trim();
+      const url = resolveServerUrl();
+      if (!url) {
+        showHomeError("Enter a multiplayer server URL.");
+        return;
+      }
+      showHomeError("");
+      connectToServer(() => {
+        sendToServer({ type: "list" });
+      });
+      if (!name) {
+        showHomeError("Enter your name to join rooms.");
+      }
+    }
+
+    function connectToServer(onReady) {
+      const url = resolveServerUrl();
+      if (!url) {
+        showHomeError("Enter a multiplayer server URL.");
+        return;
+      }
+      showHomeError("");
+      state.serverUrl = url;
+      if (state.socket) {
+        state.socket.close();
+      }
+      updateConnectionStatus("Connecting...");
+      state.socket = new WebSocket(url);
+      state.socket.onopen = () => {
+        state.connected = true;
+        updateConnectionStatus("Connected");
+        updateChatAvailability();
+        if (onReady) onReady();
+      };
+      state.socket.onmessage = event => {
+        let msg;
+        try {
+          msg = JSON.parse(event.data);
+        } catch (error) {
+          return;
+        }
+        handleServerMessage(msg);
+      };
+      state.socket.onclose = () => {
+        state.connected = false;
+        updateConnectionStatus("Disconnected");
+        updateChatAvailability();
+        if (state.mode === "multi") {
+          setStatus("Disconnected from server.", "bad");
+        }
+      };
+      state.socket.onerror = () => {
+        updateConnectionStatus("Connection failed");
+        showHomeError("Unable to connect to server.");
+      };
+    }
+
+    function sendToServer(payload) {
+      if (!state.socket || !state.connected) return;
+      state.socket.send(JSON.stringify(payload));
+    }
+
+    function handleServerMessage(msg) {
+      if (!msg || !msg.type) return;
+
+      if (msg.type === "room") {
+        state.mode = "multi";
+        state.roomCode = msg.code || state.roomCode;
+        state.players = msg.players || [];
+        state.selfId = msg.selfId || state.selfId;
+        state.hostId = msg.hostId || state.hostId;
+        syncPlayerIndex();
+        state.isHost = state.selfId === state.hostId;
+        updateChatAvailability();
+        updateLobby();
+        setScreen(ui.lobby);
+        setStatus("");
+        return;
+      }
+
+      if (msg.type === "players") {
+        if (msg.players) state.players = msg.players;
+        if (msg.hostId) state.hostId = msg.hostId;
+        syncPlayerIndex();
+        state.isHost = state.selfId === state.hostId;
+        updateLobby();
+        return;
+      }
+
+      if (msg.type === "state") {
+        applyState(msg.payload);
+        return;
+      }
+
+      if (msg.type === "chat") {
+        appendChatMessage(msg);
+        return;
+      }
+
+      if (msg.type === "typing") {
+        handleTypingMessage(msg);
+        return;
+      }
+
+      if (msg.type === "rooms") {
+        state.rooms = msg.rooms || [];
+        renderRoomsList();
+        return;
+      }
+
+      if (msg.type === "room-closed") {
+        setStatus(msg.message || "Room closed.", "bad");
+        leaveRoomOrGame(true);
+        return;
+      }
+
+      if (msg.type === "info") {
+        if (msg.message) {
+          setStatus(msg.message);
+          if (ui.lobby.classList.contains("active")) {
+            ui.lobbyNote.textContent = msg.message;
+          }
+        }
+        return;
+      }
+
+      if (msg.type === "error") {
+        const message = msg.message || "Server error.";
+        if (ui.home.classList.contains("active")) {
+          showHomeError(message);
+        } else {
+          setStatus(message, "bad");
+        }
+        if (ui.lobby.classList.contains("active")) {
+          ui.lobbyNote.textContent = message;
+        }
+      }
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generatePuzzle(settings = state.settings) {
+      const { colorCount, capacity, extraTubes } = normalizeSettings(settings);
+      state.capacity = capacity;
+      const colors = palette.slice(0, colorCount);
+      const units = [];
+      colors.forEach(color => {
+        for (let i = 0; i < capacity; i += 1) {
+          units.push(color);
+        }
+      });
+      shuffle(units);
+      const tubeCount = colorCount + extraTubes;
+      const tubes = Array.from({ length: tubeCount }, () => []);
+      let idx = 0;
+      for (let t = 0; t < colorCount; t += 1) {
+        for (let i = 0; i < capacity; i += 1) {
+          tubes[t].push(units[idx++]);
+        }
+      }
+      return tubes;
+    }
+
+    function cloneTubes(tubes) {
+      return tubes.map(tube => tube.slice());
+    }
+
+    function renderBoard() {
+      ui.board.innerHTML = "";
+      state.tubes.forEach((tube, index) => {
+        const tubeEl = document.createElement("button");
+        tubeEl.className = "tube";
+        tubeEl.dataset.index = index;
+        if (state.selected === index) {
+          tubeEl.classList.add("selected");
+        }
+        const liquid = document.createElement("div");
+        liquid.className = "liquid";
+        for (let level = 0; level < state.capacity; level += 1) {
+          const layer = document.createElement("div");
+          layer.className = "layer";
+          const color = tube[level];
+          if (color) {
+            layer.classList.add("filled");
+            layer.style.background = color;
+          } else {
+            layer.style.background = "rgba(255, 255, 255, 0.05)";
+          }
+          liquid.appendChild(layer);
+        }
+        tubeEl.appendChild(liquid);
+        tubeEl.addEventListener("click", () => onTubeClick(index));
+        ui.board.appendChild(tubeEl);
+      });
+    }
+
+    function setStatus(message, type = "") {
+      ui.status.textContent = message;
+      ui.status.className = `status ${type}`.trim();
+    }
+
+    function updateChatAvailability() {
+      const enabled = state.mode === "multi" && state.connected;
+      if (ui.chatInput) ui.chatInput.disabled = !enabled;
+      if (ui.chatSendBtn) ui.chatSendBtn.disabled = !enabled;
+      if (ui.chatPanel) ui.chatPanel.classList.toggle("muted", state.chatMuted);
+      if (ui.chatTimestampToggle) ui.chatTimestampToggle.checked = state.showTimestamps;
+      if (ui.chatMuteToggle) ui.chatMuteToggle.checked = state.chatMuted;
+    }
+
+    function updateSoundButton() {
+      if (!ui.soundToggleBtn) return;
+      ui.soundToggleBtn.textContent = state.soundEnabled ? "Sound: On" : "Sound: Off";
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      saveSoundPref();
+      updateSoundButton();
+    }
+
+    function ensureAudioContext() {
+      if (!state.audioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        state.audioContext = new AudioCtx();
+      }
+      if (state.audioContext.state === "suspended") {
+        state.audioContext.resume();
+      }
+      return state.audioContext;
+    }
+
+    function playTone(frequency, duration, type = "sine", volume = 0.08) {
+      if (!state.soundEnabled) return;
+      const ctx = ensureAudioContext();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      gain.gain.value = volume;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + duration);
+    }
+
+    function playSound(kind) {
+      if (!state.soundEnabled) return;
+      if (kind === "move") playTone(520, 0.08, "triangle");
+      if (kind === "error") playTone(220, 0.12, "sawtooth", 0.05);
+      if (kind === "win") {
+        playTone(660, 0.12, "triangle", 0.09);
+        setTimeout(() => playTone(880, 0.14, "triangle", 0.09), 140);
+      }
+      if (kind === "undo") playTone(360, 0.08, "sine", 0.07);
+      if (kind === "redo") playTone(420, 0.08, "sine", 0.07);
+    }
+
+    function clearChat() {
+      if (ui.chatMessages) ui.chatMessages.innerHTML = "";
+    }
+
+    function appendChatMessage({ name, text, time, playerId, system }) {
+      if (!ui.chatMessages) return;
+      const messageEl = document.createElement("div");
+      messageEl.className = "chat-message";
+      if (system) messageEl.classList.add("system");
+      if (playerId && playerId === state.selfId) messageEl.classList.add("self");
+
+      const meta = document.createElement("div");
+      meta.className = "chat-meta";
+      const displayTime = state.showTimestamps && time ? ` · ${time}` : "";
+      if (system) {
+        meta.textContent = state.showTimestamps && time ? `System${displayTime}` : "System";
+      } else {
+        meta.textContent = `${name || "Player"}${displayTime}`;
+      }
+
+      const bubble = document.createElement("div");
+      bubble.className = "chat-bubble";
+      bubble.textContent = text;
+
+      messageEl.appendChild(meta);
+      messageEl.appendChild(bubble);
+      ui.chatMessages.appendChild(messageEl);
+      if (!state.chatMuted) {
+        ui.chatMessages.scrollTop = ui.chatMessages.scrollHeight;
+      }
+    }
+
+    function sendChat() {
+      const text = ui.chatInput.value.trim();
+      if (!text) return;
+      if (state.mode !== "multi") {
+        setStatus("Chat is only available in multiplayer.", "bad");
+        return;
+      }
+      sendToServer({ type: "chat", text });
+      ui.chatInput.value = "";
+      if (state.isTyping) {
+        state.isTyping = false;
+        sendToServer({ type: "typing", isTyping: false });
+      }
+    }
+
+    function updateTypingIndicator() {
+      if (!ui.typingIndicator) return;
+      const names = Array.from(state.typingUsers.values());
+      if (names.length === 0) {
+        ui.typingIndicator.textContent = "";
+        return;
+      }
+      ui.typingIndicator.textContent = names.length === 1
+        ? `${names[0]} is typing...`
+        : `${names.slice(0, 2).join(", ")} are typing...`;
+    }
+
+    function handleTypingInput() {
+      if (state.mode !== "multi") return;
+      const hasText = ui.chatInput.value.trim().length > 0;
+      if (hasText && !state.isTyping) {
+        state.isTyping = true;
+        sendToServer({ type: "typing", isTyping: true });
+      }
+      if (!hasText && state.isTyping) {
+        state.isTyping = false;
+        sendToServer({ type: "typing", isTyping: false });
+      }
+      clearTimeout(typingTimeout);
+      if (hasText) {
+        typingTimeout = setTimeout(() => {
+          if (state.isTyping) {
+            state.isTyping = false;
+            sendToServer({ type: "typing", isTyping: false });
+          }
+        }, 1200);
+      }
+    }
+
+    function handleTypingMessage(msg) {
+      if (!msg.playerId || msg.playerId === state.selfId) return;
+      if (msg.isTyping) {
+        state.typingUsers.set(msg.playerId, msg.name || "Player");
+      } else {
+        state.typingUsers.delete(msg.playerId);
+      }
+      updateTypingIndicator();
+    }
+
+    function updateHud() {
+      if (state.mode === "solo") {
+        ui.modeLabel.textContent = `Solo: ${state.players[0] || "Player"}`;
+        ui.turnLabel.textContent = "";
+      } else {
+        ui.modeLabel.textContent = `Online Room ${state.roomCode}`;
+        const currentName = state.players[state.currentTurn]?.name || "Player";
+        ui.turnLabel.textContent = `Turn: ${currentName}`;
+      }
+    }
+
+    function canMove(sourceIndex, targetIndex) {
+      const source = state.tubes[sourceIndex];
+      const target = state.tubes[targetIndex];
+      if (!source || !target) return false;
+      if (source.length === 0) return false;
+      if (target.length >= state.capacity) return false;
+      const color = source[source.length - 1];
+      const targetTop = target[target.length - 1];
+      if (targetTop && targetTop !== color) return false;
+      return true;
+    }
+
+    function onTubeClick(index) {
+      if (state.mode === "multi") {
+        if (state.playerIndex !== state.currentTurn) {
+          setStatus("Not your turn yet.", "bad");
+          playSound("error");
+          return;
+        }
+
+        if (state.selected === null) {
+          if (state.tubes[index].length === 0) {
+            setStatus("Pick a tube with liquid.", "bad");
+            playSound("error");
+            return;
+          }
+          state.selected = index;
+          setStatus("Tube selected.");
+          renderBoard();
+          return;
+        }
+
+        if (state.selected === index) {
+          state.selected = null;
+          setStatus("Selection cleared.");
+          renderBoard();
+          return;
+        }
+
+        if (!canMove(state.selected, index)) {
+          setStatus("You can only pour onto the same color or empty.", "bad");
+          playSound("error");
+          if (state.tubes[index].length > 0) {
+            state.selected = index;
+          }
+          renderBoard();
+          return;
+        }
+
+        sendToServer({ type: "move", from: state.selected, to: index });
+        state.selected = null;
+        setStatus("Move sent...");
+        renderBoard();
+        return;
+      }
+
+      if (state.selected === null) {
+        if (state.tubes[index].length === 0) {
+          setStatus("Pick a tube with liquid.", "bad");
+          playSound("error");
+          return;
+        }
+        state.selected = index;
+        setStatus("Tube selected.");
+        renderBoard();
+        return;
+      }
+
+      if (state.selected === index) {
+        state.selected = null;
+        setStatus("Selection cleared.");
+        renderBoard();
+        return;
+      }
+
+      const moved = applyLocalMove(state.selected, index);
+      if (moved) {
+        state.selected = null;
+      } else if (state.tubes[index].length > 0) {
+        state.selected = index;
+      }
+      renderBoard();
+    }
+
+    function applyLocalMove(sourceIndex, targetIndex) {
+      const source = state.tubes[sourceIndex];
+      const target = state.tubes[targetIndex];
+      if (source.length === 0) {
+        setStatus("That tube is empty.", "bad");
+        playSound("error");
+        return false;
+      }
+      if (target.length >= state.capacity) {
+        setStatus("Target tube is full.", "bad");
+        playSound("error");
+        return false;
+      }
+      const color = source[source.length - 1];
+      const targetTop = target[target.length - 1];
+      if (targetTop && targetTop !== color) {
+        setStatus("You can only pour onto the same color or empty.", "bad");
+        playSound("error");
+        return false;
+      }
+
+      pushHistory();
+      source.pop();
+      target.push(color);
+      animatePour(sourceIndex, targetIndex);
+      playSound("move");
+
+      const isWin = checkWin();
+      if (isWin) {
+        setStatus("Puzzle solved! Great sorting.", "good");
+        handleWinProgress();
+        triggerWin("Puzzle solved!");
+      } else {
+        setStatus("Move completed.");
+      }
+
+      updateHud();
+      updateUndoRedoButtons();
+      return true;
+    }
+
+    function resetHistory() {
+      state.history = [];
+      state.future = [];
+      updateUndoRedoButtons();
+    }
+
+    function pushHistory() {
+      state.history.push(cloneTubes(state.tubes));
+      if (state.history.length > 80) state.history.shift();
+      state.future = [];
+    }
+
+    function undoMove() {
+      if (state.mode !== "solo") {
+        setStatus("Undo is only available in solo.", "bad");
+        return;
+      }
+      if (state.history.length === 0) return;
+      state.future.push(cloneTubes(state.tubes));
+      state.tubes = state.history.pop();
+      state.selected = null;
+      updateHud();
+      renderBoard();
+      updateUndoRedoButtons();
+      setStatus("Move undone.");
+      playSound("undo");
+    }
+
+    function redoMove() {
+      if (state.mode !== "solo") {
+        setStatus("Redo is only available in solo.", "bad");
+        return;
+      }
+      if (state.future.length === 0) return;
+      state.history.push(cloneTubes(state.tubes));
+      state.tubes = state.future.pop();
+      state.selected = null;
+      updateHud();
+      renderBoard();
+      updateUndoRedoButtons();
+      setStatus("Move redone.");
+      playSound("redo");
+    }
+
+    function updateUndoRedoButtons() {
+      if (!ui.undoBtn || !ui.redoBtn) return;
+      const solo = state.mode === "solo";
+      ui.undoBtn.disabled = !solo || state.history.length === 0;
+      ui.redoBtn.disabled = !solo || state.future.length === 0;
+    }
+
+    function handleWinProgress() {
+      if (!state.selectedLevelId) return;
+      if (state.selectedLevelId >= state.progress.highestLevel && state.selectedLevelId < LEVELS.length) {
+        state.progress.highestLevel = state.selectedLevelId + 1;
+        saveProgress();
+        renderLevels();
+      }
+    }
+
+    function animatePour(sourceIndex, targetIndex) {
+      const sourceEl = document.querySelector(`.tube[data-index="${sourceIndex}"]`);
+      const targetEl = document.querySelector(`.tube[data-index="${targetIndex}"]`);
+      if (sourceEl) sourceEl.classList.add("pour");
+      if (targetEl) targetEl.classList.add("pour");
+      setTimeout(() => {
+        if (sourceEl) sourceEl.classList.remove("pour");
+        if (targetEl) targetEl.classList.remove("pour");
+      }, 360);
+    }
+
+    function checkWin() {
+      return state.tubes.every(tube => {
+        if (tube.length === 0) return true;
+        if (tube.length !== state.capacity) return false;
+        return tube.every(color => color === tube[0]);
+      });
+    }
+
+    function triggerWin(message) {
+      if (state.winActive) return;
+      state.winActive = true;
+      document.body.classList.add("win");
+      if (ui.winMessage) ui.winMessage.textContent = message || "Puzzle solved!";
+      if (ui.winOverlay) ui.winOverlay.classList.add("active");
+      playSound("win");
+    }
+
+    function clearWin() {
+      state.winActive = false;
+      document.body.classList.remove("win");
+      if (ui.winOverlay) ui.winOverlay.classList.remove("active");
+    }
+
+    function startSolo() {
+      const name = requireName();
+      if (!name) return;
+      state.mode = "solo";
+      state.playerName = name;
+      state.players = [name];
+      state.selected = null;
+      state.tubes = generatePuzzle(state.settings);
+      state.initialTubes = cloneTubes(state.tubes);
+      resetHistory();
+      clearWin();
+      clearChat();
+      updateChatAvailability();
+      setScreen(ui.game);
+      setStatus("Game on! Choose a tube.");
+      updateHud();
+      renderBoard();
+    }
+
+    function createRoom() {
+      const name = requireName();
+      if (!name) return;
+      state.playerName = name;
+      clearChat();
+      connectToServer(() => {
+        sendToServer({ type: "create", name: state.playerName });
+      });
+    }
+
+    function joinRoom() {
+      const name = requireName();
+      if (!name) return;
+      const code = ui.roomCodeInput.value.trim().toUpperCase();
+      if (!code) {
+        showHomeError("Enter a room code to join a server.");
+        return;
+      }
+      showHomeError("");
+      state.playerName = name;
+      clearChat();
+      connectToServer(() => {
+        sendToServer({ type: "join", name: state.playerName, code });
+      });
+      ui.lobbyNote.textContent = "Waiting for the host to start the game...";
+    }
+
+    function updateLobby() {
+      ui.roomCodeLabel.textContent = state.roomCode || "";
+      ui.playersList.innerHTML = "";
+      const players = state.players.length ? state.players : [{ name: state.playerName }];
+      players.forEach((player, index) => {
+        const pill = document.createElement("div");
+        pill.className = "player-pill";
+        const dot = document.createElement("span");
+        dot.className = "player-dot";
+        dot.style.background = index === 0 ? "#ffd166" : "#4cc9f0";
+        pill.appendChild(dot);
+        pill.appendChild(document.createTextNode(player.name || "Player"));
+        ui.playersList.appendChild(pill);
+      });
+      ui.startGameBtn.disabled = !state.isHost || state.players.length < 2;
+      if (state.isHost) {
+        ui.lobbyNote.textContent = state.players.length < 2
+          ? "Waiting for player 2 to join the server..."
+          : "All players joined. Start when ready.";
+      } else {
+        ui.lobbyNote.textContent = "Waiting for the host to start the game...";
+      }
+    }
+
+    function startMultiplayerGame() {
+      if (!state.isHost) return;
+      clearWin();
+      sendToServer({ type: "start", settings: state.settings, levelId: state.selectedLevelId });
+    }
+
+    function restartPuzzle() {
+      if (state.mode === "multi") {
+        if (!state.isHost) {
+          setStatus("Only the host can restart.", "bad");
+          return;
+        }
+        clearWin();
+        sendToServer({ type: "restart" });
+        return;
+      }
+      if (state.initialTubes.length === 0) return;
+      state.tubes = cloneTubes(state.initialTubes);
+      state.selected = null;
+      state.currentTurn = 0;
+      resetHistory();
+      clearWin();
+      renderBoard();
+      updateHud();
+      setStatus("Puzzle restarted.");
+    }
+
+    function newPuzzle() {
+      if (state.mode === "multi") {
+        if (!state.isHost) {
+          setStatus("Only the host can start a new puzzle.", "bad");
+          return;
+        }
+        clearWin();
+        sendToServer({ type: "new", settings: state.settings, levelId: state.selectedLevelId });
+        return;
+      }
+      state.tubes = generatePuzzle(state.settings);
+      state.initialTubes = cloneTubes(state.tubes);
+      state.selected = null;
+      state.currentTurn = 0;
+      resetHistory();
+      clearWin();
+      renderBoard();
+      updateHud();
+      setStatus("Fresh puzzle ready.");
+    }
+
+    function leaveRoomOrGame(fromServer = false) {
+      if (state.socket) {
+        if (!fromServer && state.connected) {
+          sendToServer({ type: "leave" });
+        }
+        state.socket.close();
+        state.socket = null;
+      }
+      state.mode = "solo";
+      state.players = [];
+      state.roomCode = "";
+      state.isHost = false;
+      state.selfId = "";
+      state.hostId = "";
+      state.currentTurn = 0;
+      state.selected = null;
+      state.typingUsers = new Map();
+      updateTypingIndicator();
+      clearChat();
+      updateChatAvailability();
+      clearWin();
+      updateUndoRedoButtons();
+      updateConnectionStatus("");
+      setScreen(ui.home);
+      setStatus("");
+    }
+
+    function applyState(payload) {
+      if (!payload) return;
+      if (payload.capacity) state.capacity = payload.capacity;
+      if (payload.players) state.players = payload.players;
+      if (payload.hostId) state.hostId = payload.hostId;
+      if (payload.settings) {
+        const normalized = normalizeSettings(payload.settings);
+        state.settings = { ...normalized };
+        state.capacity = normalized.capacity;
+        state.selectedLevelId = payload.settings.levelId || null;
+        updateSettingsUI();
+        renderLevels();
+      }
+      if (payload.tubes) state.tubes = cloneTubes(payload.tubes);
+      if (payload.initial) state.initialTubes = cloneTubes(payload.initial);
+      if (typeof payload.currentTurn === "number") state.currentTurn = payload.currentTurn;
+      state.selected = null;
+      syncPlayerIndex();
+      state.isHost = state.selfId === state.hostId;
+      updateChatAvailability();
+      updateUndoRedoButtons();
+      updateHud();
+      renderBoard();
+      setScreen(ui.game);
+      if (payload.status) {
+        setStatus(payload.status, payload.statusType || "");
+      } else {
+        setStatus("");
+      }
+      if (payload.statusType === "good") {
+        handleWinProgress();
+        triggerWin(payload.status || "Puzzle solved!");
+      } else if (state.winActive) {
+        clearWin();
+      }
+    }
+
+    ui.playerName.addEventListener("input", toggleNameGates);
+    ui.serverUrl.addEventListener("input", toggleNameGates);
+    ui.soloBtn.addEventListener("click", startSolo);
+    ui.createRoomBtn.addEventListener("click", createRoom);
+    ui.joinRoomBtn.addEventListener("click", joinRoom);
+    ui.refreshRoomsBtn.addEventListener("click", requestRoomList);
+    ui.startGameBtn.addEventListener("click", startMultiplayerGame);
+    ui.leaveRoomBtn.addEventListener("click", () => leaveRoomOrGame());
+    ui.leaveGameBtn.addEventListener("click", () => leaveRoomOrGame());
+    ui.undoBtn.addEventListener("click", undoMove);
+    ui.redoBtn.addEventListener("click", redoMove);
+    ui.restartBtn.addEventListener("click", restartPuzzle);
+    ui.newPuzzleBtn.addEventListener("click", newPuzzle);
+    ui.soundToggleBtn.addEventListener("click", toggleSound);
+    ui.chatForm.addEventListener("submit", event => {
+      event.preventDefault();
+      sendChat();
+    });
+    ui.chatInput.addEventListener("input", handleTypingInput);
+    ui.chatInput.addEventListener("blur", () => {
+      if (state.isTyping) {
+        state.isTyping = false;
+        sendToServer({ type: "typing", isTyping: false });
+      }
+    });
+    ui.chatTimestampToggle.addEventListener("change", () => {
+      state.showTimestamps = ui.chatTimestampToggle.checked;
+      saveChatPrefs();
+    });
+    ui.chatMuteToggle.addEventListener("change", () => {
+      state.chatMuted = ui.chatMuteToggle.checked;
+      saveChatPrefs();
+      updateChatAvailability();
+    });
+    ui.continueBtn.addEventListener("click", continueLevel);
+    ui.colorCountRange.addEventListener("input", applyCustomSettings);
+    ui.capacityRange.addEventListener("input", applyCustomSettings);
+    ui.extraTubesRange.addEventListener("input", applyCustomSettings);
+    ui.winCloseBtn.addEventListener("click", clearWin);
+
+    const autoUrl = getAutoServerUrl();
+    if (!ui.serverUrl.value) {
+      ui.serverUrl.value = autoUrl || "ws://localhost:3000";
+    }
+    loadPersistedState();
+    updateSettingsUI();
+    renderLevels();
+    toggleNameGates();
+    updateSoundButton();
+    updateChatAvailability();
+    updateUndoRedoButtons();
+    renderRoomsList();
+    renderBoard();
+  </script>
+</body>
+</html>
