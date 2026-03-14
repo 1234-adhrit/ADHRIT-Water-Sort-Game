@@ -28,8 +28,8 @@ Progress and settings are saved in your browser.
 1. Open a terminal in this folder.
 2. Start the server:
    ```bash
-   npm install
-   npm start
+   npm.cmd install
+   npm.cmd start
 
    ```
 3. Open the game:
